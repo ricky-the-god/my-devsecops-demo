@@ -1,0 +1,4 @@
+name: ".NET CI (build & tests)"
+
+on: 
+
