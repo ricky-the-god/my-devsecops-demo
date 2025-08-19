@@ -30,6 +30,10 @@ jobs:
           dotnet-version: 9.0.x              # cible ton projet net9.0
           cache: true          # active le cache NuGet auto
 
+      # (Optionnel) Générer un lockfile pour améliorer le cache NuGet
+      - name: Create NuGet lockfile
+        run: dotnet restore --use-lock-file
+
       # 3) Restore des dépendances
       - name: Restore
         run: dotnet restore
@@ -40,12 +44,12 @@ jobs:
 
       # 5) Tests unitaires (avec logs TRX)
       - name: Test
-        run: dotnet test MyDevSecOpsDemo.Tests/MyDevSecOpsDemo.Tests.csproj --no-build -c Release --logger "trx;LogFileName=test_results.trx"
+        run: dotnet test MyDevSecOpsDemo.Tests/MyDevSecOpsDemo.Tests.csproj --no-build -c Release --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
 
-      # 6) (Optionnel) Publier les résultats de tests comme artefacts
+      # 6) Publier les résultats de tests comme artefacts
       - name: Upload test results
         if: always() 
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: MyDevSecOpsDemo.Tests/TestResults/*.trx
+          path: TestResults/*.trx
