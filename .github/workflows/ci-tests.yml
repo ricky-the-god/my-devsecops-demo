@@ -1,4 +1,63 @@
-name: ".NET CI (build & tests)"
+name: CI - Build & Test (.NET)
 
-on: 
+# == Quand déclencher le workflow ==
+on:
+  push:
+    branches: [ "main" ]        # à chaque push sur main
+  pull_request:
+    branches: [ "main" ]        # et sur chaque PR qui cible main
+  workflow_dispatch:             # bouton "Run workflow" manuel dans l'UI
 
+# == Évite d'empiler des runs si tu pushes en rafale ==
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest       # machine fournie par GitHub (Linux)
+    timeout-minutes: 15
+
+    steps:
+      # 1) Récupérer le code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Installer le SDK .NET
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x              # cible ton projet net8.0
+          cache: true          # active le cache NuGet auto
+
+      # (Optionnel) Cache NuGet plus agressif si tu veux
+      # - name: Cache NuGet
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.nuget/packages
+      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuget-
+
+      # 3) Restore des dépendances
+      - name: Restore
+        run: dotnet restore
+
+      # 4) Build en Release
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      # 5) Tests unitaires (avec logs TRX)
+      - name: Test
+        run: dotnet test --no-build -c Release --logger "trx;LogFileName=test_results.trx"
+
+      # 6) (Optionnel) Publier les résultats de tests comme artefacts
+      - name: Upload test results
+        if: always()   # même si les tests échouent, on uploade
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/TestResults/**/*.xml
