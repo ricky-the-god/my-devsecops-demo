@@ -28,11 +28,10 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x              # cible ton projet net9.0
-          cache: true          # active le cache NuGet auto
-
+         
       # (Optionnel) Générer un lockfile pour améliorer le cache NuGet
-      - name: Create NuGet lockfile
-        run: dotnet restore --use-lock-file
+      #- name: Create NuGet lockfile
+      #  run: dotnet restore --use-lock-file
 
       # 3) Restore des dépendances
       - name: Restore
