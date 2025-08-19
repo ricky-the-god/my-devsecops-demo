@@ -27,18 +27,8 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            8.0.x              # cible ton projet net8.0
+          dotnet-version: 9.0.x              # cible ton projet net9.0
           cache: true          # active le cache NuGet auto
-
-      # (Optionnel) Cache NuGet plus agressif si tu veux
-      # - name: Cache NuGet
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.nuget/packages
-      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-nuget-
 
       # 3) Restore des dépendances
       - name: Restore
@@ -50,14 +40,12 @@ jobs:
 
       # 5) Tests unitaires (avec logs TRX)
       - name: Test
-        run: dotnet test --no-build -c Release --logger "trx;LogFileName=test_results.trx"
+        run: dotnet test MyDevSecOpsDemo.Tests/MyDevSecOpsDemo.Tests.csproj --no-build -c Release --logger "trx;LogFileName=test_results.trx"
 
       # 6) (Optionnel) Publier les résultats de tests comme artefacts
       - name: Upload test results
-        if: always()   # même si les tests échouent, on uploade
+        if: always() 
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: |
-            **/TestResults/*.trx
-            **/TestResults/**/*.xml
+          path: MyDevSecOpsDemo.Tests/TestResults/*.trx
